@@ -46,7 +46,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.bulackiy.Main</mainClass>
+                            <mainClass>com.intetics.organizerbot.BotApplication</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
