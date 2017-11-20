@@ -35,7 +35,7 @@ public class OrganizerBot  extends TelegramLongPollingBot {
 
     private void handleMessage(Message message) {
         Long chatId = message.getChatId();
-        if(ContextHolder.getInstance().contains(message.getChatId())){
+        if(!ContextHolder.getInstance().contains(message.getChatId())){
             ContextHolder.getInstance().setContext(chatId, Context.MAIN_MENU);
             sendGreetingMessage(message);
         } else {
@@ -73,6 +73,5 @@ public class OrganizerBot  extends TelegramLongPollingBot {
     private void handleMessageFromMainMenu(Message inMessage) {
 
     }
-
 
 }
