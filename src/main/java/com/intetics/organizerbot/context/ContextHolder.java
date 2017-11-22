@@ -28,15 +28,15 @@ public class ContextHolder {
         return currentInstance;
     }
 
-    public void setContext(Long chatId, Context context) {
-        contexts.put(chatId, context);
+    public void setContext(Long id, Context context) {
+        contexts.put(id, context);
     }
 
-    public Context getContext(Long chatId){
-        return contexts.get(chatId);
+    public Context getContext(Long id){
+        return contexts.get(id);
     }
 
-    public boolean contains(Long chatId){
-        return contexts.containsKey(chatId);
+    public boolean contains(Long id){
+        return contexts.containsKey(id);
     }
 }
