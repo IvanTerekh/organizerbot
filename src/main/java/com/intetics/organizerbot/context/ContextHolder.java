@@ -8,9 +8,11 @@ public class ContextHolder {
 
     private static volatile ContextHolder instance;
     private volatile Map<Long, Context> contexts;
+    private volatile Map<Long, Object> editingValues;
 
     private ContextHolder() {
-        contexts = new HashMap<Long, Context>();
+        contexts = new HashMap<>();
+        editingValues = new HashMap<>();
     }
 
     public static ContextHolder getInstance() {
@@ -32,11 +34,27 @@ public class ContextHolder {
         contexts.put(id, context);
     }
 
-    public Context getContext(Long id){
+    public Context getContext(Long id) {
         return contexts.get(id);
     }
 
-    public boolean contains(Long id){
+    public boolean contains(Long id) {
         return contexts.containsKey(id);
+    }
+
+    public void setEditingValue(Long id, Object value) {
+        editingValues.put(id, value);
+    }
+
+    public Object getEditingValue(Long id) {
+        return editingValues.get(id);
+    }
+
+    public boolean isEditing(Long id) {
+        return editingValues.containsKey(id);
+    }
+
+    public void removeEditingValue(Long id) {
+        editingValues.remove(id);
     }
 }
