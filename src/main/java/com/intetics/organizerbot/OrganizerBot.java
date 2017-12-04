@@ -88,6 +88,7 @@ public class OrganizerBot extends TelegramLongPollingBot {
             case ADD_CLASS_CHOOSE_SUBJECT:
                 handleMessageFromAddClassChooseSubject(message);
                 break;
+//            case ADD_EVENT
         }
     }
 
@@ -204,7 +205,10 @@ public class OrganizerBot extends TelegramLongPollingBot {
     }
 
     private void handleMessageFromMainMenu(Message inMessage) {
-        if (buttons.getString("addClass").equals(inMessage.getText())) {
+        if (buttons.getString("addEvent").equals(inMessage.getText())) {
+            sendResponseOnAddEvent(inMessage);
+            setContext(inMessage.getChatId(), Context.ADD_EVENT_CHOOSE_DATE);
+        } else if (buttons.getString("addClass").equals(inMessage.getText())) {
             sendResponseOnAddClass(inMessage);
             setContext(inMessage.getChatId(), Context.ADD_CLASS_CHOOSE_DAY);
         } else if (buttons.getString("addSubject").equals(inMessage.getText())) {
@@ -218,6 +222,14 @@ public class OrganizerBot extends TelegramLongPollingBot {
         } else {
             sendMainMenu(inMessage, messages.getString("cannotUnderstand") + messages.getString("chooseFromMenu"));
         }
+    }
+
+    private void sendResponseOnAddEvent(Message inMessage) {
+        SendMessage outMessage = new SendMessage();
+        outMessage.setChatId(inMessage.getChatId());
+        outMessage.setText(messages.getString("chooseDate"));
+        outMessage.setReplyMarkup(Keyboards.getCalendarKeyboard());
+        send(outMessage);
     }
 
     private void sendResponseOnAddClass(Message inMessage) {
