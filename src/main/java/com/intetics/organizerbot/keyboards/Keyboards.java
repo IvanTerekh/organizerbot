@@ -107,7 +107,7 @@ public class Keyboards {
         return getCalendarKeyboard(YearMonth.now());
     }
 
-    public static ReplyKeyboard getCalendarKeyboard(YearMonth yearMonth) {
+    public static InlineKeyboardMarkup getCalendarKeyboard(YearMonth yearMonth) {
         InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<List<InlineKeyboardButton>>();
         addYearMonth(keyboard, yearMonth);

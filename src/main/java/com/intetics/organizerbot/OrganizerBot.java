@@ -4,13 +4,17 @@ import com.intetics.organizerbot.context.ContextHolder;
 import com.intetics.organizerbot.context.Context;
 import com.intetics.organizerbot.keyboards.Keyboards;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
+import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.api.objects.CallbackQuery;
 import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
+import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 import org.telegram.telegrambots.logging.BotLogger;
 
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -36,6 +40,42 @@ public class OrganizerBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
             handleMessage(update.getMessage());
+        } else if (update.hasCallbackQuery()){
+            handleCallbackQuery(update.getCallbackQuery());
+        }
+    }
+
+    private void handleCallbackQuery(CallbackQuery query) {//TODO: rewrite in good style
+        String data = query.getData();
+        if(data.startsWith("goto:")){
+            resetCalendar(query);
+        } else if (data.startsWith("choose:")){
+            ContextHolder.getInstance().setEditingValue(query.getMessage().getChatId(), data.split(":")[1]);
+            setContext(query.getMessage().getChatId(), Context.ADD_EVENT_CHOOSE_TIME);
+            sendResponseOnAddEventChooseTime(query.getMessage());
+        }
+    }
+
+    private void sendResponseOnAddEventChooseTime(Message inMessage) {
+        SendMessage outMessage = new SendMessage();
+        outMessage.setChatId(inMessage.getChatId());
+        outMessage.setText(messages.getString("chooseTime"));
+        outMessage.setReplyMarkup(Keyboards.getReturnToMenuKeyboard());
+        send(outMessage);
+    }
+
+    private void resetCalendar(CallbackQuery query) {
+        EditMessageText editMarkup = new EditMessageText();
+        editMarkup.setChatId(query.getMessage().getChatId().toString());
+        editMarkup.setInlineMessageId(query.getInlineMessageId());
+        editMarkup.enableMarkdown(true);
+        editMarkup.setText(messages.getString("chooseDate"));
+        editMarkup.setMessageId(query.getMessage().getMessageId());
+        editMarkup.setReplyMarkup(Keyboards.getCalendarKeyboard(YearMonth.parse(query.getData().split(":")[1])));
+        try {
+            execute(editMarkup);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
     }
 
@@ -88,7 +128,6 @@ public class OrganizerBot extends TelegramLongPollingBot {
             case ADD_CLASS_CHOOSE_SUBJECT:
                 handleMessageFromAddClassChooseSubject(message);
                 break;
-//            case ADD_EVENT
         }
     }
 
