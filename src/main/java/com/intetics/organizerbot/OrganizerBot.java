@@ -8,13 +8,14 @@ import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.api.objects.CallbackQuery;
 import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
-import org.telegram.telegrambots.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 import org.telegram.telegrambots.logging.BotLogger;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -51,6 +52,8 @@ public class OrganizerBot extends TelegramLongPollingBot {
             resetCalendar(query);
         } else if (data.startsWith("choose:")){
             ContextHolder.getInstance().setEditingValue(query.getMessage().getChatId(), data.split(":")[1]);
+            LocalDate date = LocalDate.parse(data.split(":")[1]);
+            reply(query.getMessage(), date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)));
             setContext(query.getMessage().getChatId(), Context.ADD_EVENT_CHOOSE_TIME);
             sendResponseOnAddEventChooseTime(query.getMessage());
         }
@@ -69,7 +72,7 @@ public class OrganizerBot extends TelegramLongPollingBot {
         editMarkup.setChatId(query.getMessage().getChatId().toString());
         editMarkup.setInlineMessageId(query.getInlineMessageId());
         editMarkup.enableMarkdown(true);
-        editMarkup.setText(messages.getString("chooseDate"));
+        editMarkup.setText(messages.getString("chooseDate2"));
         editMarkup.setMessageId(query.getMessage().getMessageId());
         editMarkup.setReplyMarkup(Keyboards.getCalendarKeyboard(YearMonth.parse(query.getData().split(":")[1])));
         try {
@@ -128,7 +131,65 @@ public class OrganizerBot extends TelegramLongPollingBot {
             case ADD_CLASS_CHOOSE_SUBJECT:
                 handleMessageFromAddClassChooseSubject(message);
                 break;
+            case ADD_EVENT_CHOOSE_DATE:
+                handleMessageFromAddEventChooseDate(message);
+                break;
+            case ADD_EVENT_CHOOSE_TIME:
+                handleMessageFromAddEventChooseTime(message);
+                break;
+            case ADD_EVENT_CHOOSE_DESCRIPTION:
+                handleMessageFromAddEventChooseDescription(message);
+                break;
         }
+    }
+
+    private void handleMessageFromAddEventChooseDate(Message message) {
+        String text = message.getText();
+        if(buttons.getString("mainMenu").equals(text)) {
+            setContext(message.getChatId(), Context.MAIN_MENU);
+            sendMainMenu(message);
+        } else {
+            String replyText = messages.getString("cannotUnderstand") + ' ' + messages.getString("chooseDate1");
+            reply(message, replyText);
+        }
+    }
+
+    private void handleMessageFromAddEventChooseDescription(Message message) {
+        String text = message.getText();
+        if(buttons.getString("mainMenu").equals(text)) {
+            setContext(message.getChatId(), Context.MAIN_MENU);
+            sendMainMenu(message);
+        } else {
+            Object o = ContextHolder.getInstance().getEditingValue(message.getChatId());
+            ContextHolder.getInstance().setEditingValue(message.getChatId(), o);//TODO: rewrite
+            reply(message, messages.getString("eventAdded"));
+            sendMainMenu(message);
+            setContext(message.getChatId(), Context.MAIN_MENU);
+        }
+    }
+
+    private void handleMessageFromAddEventChooseTime(Message message) {
+        String text = message.getText();
+        if (text.matches("^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$")){
+            Object o = ContextHolder.getInstance().getEditingValue(message.getChatId());
+            ContextHolder.getInstance().setEditingValue(message.getChatId(), o);//TODO: rewrite
+            sendResponseOnChooseTimeFromAddEvent(message);
+            setContext(message.getChatId(), Context.ADD_EVENT_CHOOSE_DESCRIPTION);
+        } else if(buttons.getString("mainMenu").equals(text)) {
+            setContext(message.getChatId(), Context.MAIN_MENU);
+            sendMainMenu(message);
+        } else {
+            String replyText = messages.getString("cannotUnderstand") + ' ' + messages.getString("chooseTime");
+            reply(message, replyText);
+        }
+    }
+
+    private void sendResponseOnChooseTimeFromAddEvent(Message inMessage) {
+        SendMessage outMessage = new SendMessage();
+        outMessage.setChatId(inMessage.getChatId());
+        outMessage.setText(messages.getString("chooseDescription"));
+        outMessage.setReplyMarkup(Keyboards.getReturnToMenuKeyboard());
+        send(outMessage);
     }
 
     private void handleMessageFromAddClassChooseSubject(Message message) {
@@ -160,7 +221,7 @@ public class OrganizerBot extends TelegramLongPollingBot {
         if (text.matches("^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$")){
             Object o = ContextHolder.getInstance().getEditingValue(message.getChatId());
             ContextHolder.getInstance().setEditingValue(message.getChatId(), o);//TODO: rewrite
-            sendResponseOnChooseTime(message);
+            sendResponseOnChooseTimeFromAddClass(message);
             setContext(message.getChatId(), Context.ADD_CLASS_CHOOSE_SUBJECT);
         } else if(buttons.getString("mainMenu").equals(text)) {
             setContext(message.getChatId(), Context.MAIN_MENU);
@@ -171,7 +232,7 @@ public class OrganizerBot extends TelegramLongPollingBot {
         }
     }
 
-    private void sendResponseOnChooseTime(Message inMessage) {
+    private void sendResponseOnChooseTimeFromAddClass(Message inMessage) {
         SendMessage outMessage = new SendMessage();
         outMessage.setChatId(inMessage.getChatId());
         outMessage.setText(messages.getString("chooseSubject"));
@@ -266,7 +327,12 @@ public class OrganizerBot extends TelegramLongPollingBot {
     private void sendResponseOnAddEvent(Message inMessage) {
         SendMessage outMessage = new SendMessage();
         outMessage.setChatId(inMessage.getChatId());
-        outMessage.setText(messages.getString("chooseDate"));
+        outMessage.setText(messages.getString("chooseDate1"));
+        outMessage.setReplyMarkup(Keyboards.getReturnToMenuKeyboard());
+        send(outMessage);
+        outMessage = new SendMessage();
+        outMessage.setChatId(inMessage.getChatId());
+        outMessage.setText(messages.getString("chooseDate2"));
         outMessage.setReplyMarkup(Keyboards.getCalendarKeyboard());
         send(outMessage);
     }
