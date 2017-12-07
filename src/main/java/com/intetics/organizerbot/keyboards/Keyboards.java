@@ -184,6 +184,7 @@ public class Keyboards {
             add(makeInlineButton(twoLetterDays.getString("tuesday")));
             add(makeInlineButton(twoLetterDays.getString("wednesday")));
             add(makeInlineButton(twoLetterDays.getString("thursday")));
+            add(makeInlineButton(twoLetterDays.getString("friday")));
             add(makeInlineButton(twoLetterDays.getString("saturday")));
             add(makeInlineButton(twoLetterDays.getString("sunday")));
         }});
