@@ -1,7 +1,6 @@
 package com.intetics.organizerbot;
 
 import com.intetics.organizerbot.entities.*;
-import javafx.util.converter.LocalTimeStringConverter;
 import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.configuration.server.ServerRuntime;
 import org.apache.cayenne.query.ObjectSelect;
