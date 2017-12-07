@@ -9,10 +9,12 @@ public class ContextHolder {
     private static volatile ContextHolder instance;
     private volatile Map<Long, Context> contexts;
     private volatile Map<Long, Object> editingValues;
+    private volatile Map<Long, TypeOfClass> typesOfClass;
 
     private ContextHolder() {
         contexts = new HashMap<>();
         editingValues = new HashMap<>();
+        typesOfClass = new HashMap<>();
     }
 
     public static ContextHolder getInstance() {
@@ -56,5 +58,13 @@ public class ContextHolder {
 
     public void removeEditingValue(Long id) {
         editingValues.remove(id);
+    }
+
+    public TypeOfClass getTypeOfClass(Long id) {
+        return typesOfClass.get(id);
+    }
+
+    public void setTypeOfClass(Long id, TypeOfClass type) {
+        typesOfClass.put(id, type);
     }
 }

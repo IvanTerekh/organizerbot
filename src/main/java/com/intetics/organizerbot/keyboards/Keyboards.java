@@ -57,10 +57,10 @@ public class Keyboards {
 //        return makeKeyboard(rows);
 //    }
 
-    public static ReplyKeyboardMarkup getSubjectListKeyboard(List<String> subjects) {
+    public static ReplyKeyboardMarkup getListKeyboard(List<String> list) {
         List<List<String>> rows = new ArrayList<>();
-        subjects.forEach(subject -> rows.add(new ArrayList<String>() {{
-            add(subject);
+        list.forEach(item -> rows.add(new ArrayList<String>() {{
+            add(item);
         }}));
         rows.add(new ArrayList<String>() {{
             add(buttons.getString("mainMenu"));
