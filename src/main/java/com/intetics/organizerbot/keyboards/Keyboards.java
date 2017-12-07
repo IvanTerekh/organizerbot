@@ -224,4 +224,13 @@ public class Keyboards {
         }});
         return makeKeyboard(rows);
     }
+
+    public static ReplyKeyboard getViewsKeyboard() {
+        return getListKeyboard(new ArrayList<String>(){{
+            add(buttons.getString("forToday"));
+            add(buttons.getString("forTomorrow"));
+            add(buttons.getString("forOtherDate"));
+            add(buttons.getString("forWeek"));
+        }});
+    }
 }

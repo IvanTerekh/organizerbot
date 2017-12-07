@@ -62,6 +62,21 @@ public class OrganizerBot extends TelegramLongPollingBot {
             case ADD_CLASS_CHOOSE_DATE:
                 handleCallbackQueryFromAddClassChooseDate(query);
                 break;
+            case SHOW_TIMETABLE:
+                handleCallbackQueryFormShowTimetable(query);
+                break;
+        }
+    }
+
+    private void handleCallbackQueryFormShowTimetable(CallbackQuery query) {
+        String data = query.getData();
+        if (data.startsWith("goto:")) {
+            resetCalendar(query);
+        } else if (data.startsWith("choose:")) {
+            LocalDate date = LocalDate.parse(data.split(":")[1]);
+            showTimetable(query.getMessage(), date);
+            setContext(query.getMessage().getChatId(), Context.MAIN_MENU);
+            sendMainMenu(query.getMessage());
         }
     }
 
@@ -136,6 +151,8 @@ public class OrganizerBot extends TelegramLongPollingBot {
             case ADD_CLASS_CHOOSE_ROOM:
                 handleMessageFromAddClassChooseRoom(message);
                 break;
+            case SHOW_TIMETABLE:
+                handleMessageFromDhowTimetable(message);
 //            case ADD_EVENT_CHOOSE_DATE:
 //                handleMessageFromAddEventChooseDate(message);
 //                break;
@@ -152,6 +169,31 @@ public class OrganizerBot extends TelegramLongPollingBot {
 //                handleMessageFromRemoveSubject(message);
 //                break;
         }
+    }
+
+    private void handleMessageFromDhowTimetable(Message message) {
+        String text = message.getText();
+        if (buttons.getString("forToday").equals(text)){
+            showTimetable(message, LocalDate.now());
+        } else if (buttons.getString("forTomorrow").equals(text)){
+            showTimetable(message, LocalDate.now().plusDays(1));
+        } else if (buttons.getString("forOtherDate").equals(text)){
+            ContextHolder.getInstance().setTypeOfClass(message.getChatId(), TypeOfClass.ONE_TIME);
+            reply(message, messages.getString("chooseDate1"), Keyboards.getReturnToMenuKeyboard());
+            reply(message, messages.getString("chooseDate2"), Keyboards.getCalendarKeyboard());
+        } else if (buttons.getString("forWeek").equals(text)){
+            LocalDate today = LocalDate.now();
+            for (int i = 0; i < 7; i++){
+                showTimetable(message, today.plusDays(i));
+            }
+        } else {
+            String replyText = messages.getString("cannotUnderstand") + ' ' + messages.getString("chooseFromMenu");
+            reply(message, replyText, Keyboards.getListKeyboard(getProfessors()));
+        }
+    }
+
+    private void showTimetable(Message message, LocalDate date) {
+        //TODO
     }
 
     private void handleMessageFromAddClassChooseProfessor(Message message) {
@@ -427,6 +469,9 @@ public class OrganizerBot extends TelegramLongPollingBot {
             List<String> subjects = getSubjects(message.getChatId());
             reply(message, messages.getString("chooseSubject"), Keyboards.getListKeyboard(subjects));
             setContext(message.getChatId(), Context.ADD_CLASS_CHOOSE_SUBJECT);
+        } else if(buttons.getString("showTimetable").equals(message.getText())){
+            reply(message, messages.getString("chooseView"), Keyboards.getViewsKeyboard());
+                setContext(message.getChatId(), Context.SHOW_TIMETABLE);
 //        } else if (buttons.getString("addSubject").equals(inMessage.getText())) {
 //            sendResponseOnAddSubject(inMessage);
 //            setContext(inMessage.getChatId(), Context.ADD_SUBJECT);
