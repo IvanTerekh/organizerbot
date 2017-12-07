@@ -47,7 +47,9 @@ public class DAO {
                     SelectById.query(Users.class, id)
                             .selectOne(context)
             );
+            context.commitChanges();
         }
+
     }
 
     public void createLesson(int id, String subject, LocalDate date, LocalTime time, String room, int type, String professorName){
@@ -68,6 +70,14 @@ public class DAO {
 
         lesson.setSubjects(sub);
         lesson.setProfessor(professor);
+
+        context.commitChanges();
+    }
+
+    public void createProfessor(String name){
+        Professors professors = context.newObject(Professors.class);
+        professors.setProfessorName(name);
+        context.commitChanges();
     }
 
     public List<Lesson> getLessonByDate(LocalDate date, int id){
@@ -99,5 +109,18 @@ public class DAO {
     public Users getUser(int id){
         return SelectById.query(Users.class, id)
                 .selectOne(context);
+    }
+
+    public List<Subject> getSubjectsByUserId(int id){
+        List<Subject> subjects = ObjectSelect.query(Subject.class)
+                .where(Subject.USER_ID.eq(id))
+                .select(context);
+        return subjects;
+    }
+
+    public List<Professors> getProfessors(){
+        List<Professors> professorss = ObjectSelect.query(Professors.class)
+                .select(context);
+        return professorss;
     }
 }
