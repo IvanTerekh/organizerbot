@@ -1,15 +1,12 @@
 package com.intetics.organizerbot;
 
+import com.intetics.organizerbot.bean.LessonBean;
 import com.intetics.organizerbot.context.ContextHolder;
 import com.intetics.organizerbot.context.Context;
 import com.intetics.organizerbot.context.TypeOfClass;
 import com.intetics.organizerbot.entities.Lesson;
 import com.intetics.organizerbot.entities.LessonType;
-import com.intetics.organizerbot.entities.Professors;
-import com.intetics.organizerbot.entities.Subject;
 import com.intetics.organizerbot.keyboards.Keyboards;
-import javassist.bytecode.SignatureAttribute;
-import jdk.internal.org.objectweb.asm.Type;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.api.objects.CallbackQuery;
@@ -96,7 +93,7 @@ public class OrganizerBot extends TelegramLongPollingBot {
     }
 
     private void setDate(CallbackQuery query, LocalDate date) {
-        Lesson lesson = (Lesson) getEditingValue(query.getMessage().getChatId());
+        LessonBean lesson = (LessonBean) getEditingValue(query.getMessage().getChatId());
         lesson.setDate(date);
     }
 
@@ -226,10 +223,9 @@ public class OrganizerBot extends TelegramLongPollingBot {
     }
 
     private void setProfessor(Message message, String text) {
-        Lesson lesson = (Lesson) getEditingValue(message.getChatId());
-        Professors professor = new Professors();
-        professor.setProfessorName(text);
-        lesson.setProfessor(professor);
+        LessonBean lesson = (LessonBean) getEditingValue(message.getChatId());
+        dao.createProfessor(text);
+        lesson.setProfessorName(text);
     }
 
     private void handleMessageFromAddClassChooseDate(Message message) {
@@ -255,27 +251,27 @@ public class OrganizerBot extends TelegramLongPollingBot {
     }
 
     private void setLesson(Message message, String text) {
-        Lesson lesson = (Lesson) getEditingValue(message.getChatId());
+        LessonBean lesson = (LessonBean) getEditingValue(message.getChatId());
         lesson.setRoom(text);
         dao.createLesson(
                 Math.toIntExact(message.getChatId()),
-                lesson.getSubjects().getSubjectTitle(),
+                lesson.getSubject(),
                 lesson.getDate(),
                 lesson.getTime(),
                 lesson.getRoom(),
                 lesson.getType(),
-                lesson.getProfessor().getProfessorName());
+                lesson.getProfessorName());
         if (ContextHolder.getInstance().getTypeOfClass(message.getChatId()).equals(TypeOfClass.WEEKLY)){
             while (lesson.getDate().getYear() == 2017){
                 lesson.setDate(lesson.getDate().plusDays(7));
                 dao.createLesson(
                         Math.toIntExact(message.getChatId()),
-                        lesson.getSubjects().getSubjectTitle(),
+                        lesson.getSubject(),
                         lesson.getDate(),
                         lesson.getTime(),
                         lesson.getRoom(),
                         lesson.getType(),
-                        lesson.getProfessor().getProfessorName());
+                        lesson.getProfessorName());
             }
         }
     }
@@ -298,7 +294,7 @@ public class OrganizerBot extends TelegramLongPollingBot {
     }
 
     private void setClassType(Message message, LessonType lessonType) {
-        Lesson lesson = (Lesson) getEditingValue(message.getChatId());
+        LessonBean lesson = (LessonBean) getEditingValue(message.getChatId());
         lesson.setType(lessonType.ordinal());
     }
 
@@ -384,15 +380,9 @@ public class OrganizerBot extends TelegramLongPollingBot {
     }
 
     private void setSubject(Message message, String text) {
-        Lesson lesson = new Lesson();
-        Subject subject = new Subject();
-        subject.setSubjectTitle(text);
-        subject.setUser(dao.getUser(Math.toIntExact(message.getChatId())));
-        List<String> subjectNames = getSubjects(message.getChatId());
-//        if (!subjectNames.contains(text)) {
-//            dao.createSubjects(Math.toIntExact(message.getChatId()), subject.getSubjectTitle());
-//        }
-        lesson.setSubjects(subject);
+        LessonBean lesson = new LessonBean();
+        dao.createSubjects(Math.toIntExact(message.getChatId()), text);
+        lesson.setSubject(text);
         setEditingValue(message.getChatId(), lesson);
     }
 
@@ -415,7 +405,7 @@ public class OrganizerBot extends TelegramLongPollingBot {
     }
 
     private void setTime(Message message, String text) {
-        Lesson lesson = (Lesson) getEditingValue(message.getChatId());
+        LessonBean lesson = (LessonBean) getEditingValue(message.getChatId());
         lesson.setTime(LocalTime.parse(text));
     }
 
@@ -445,7 +435,7 @@ public class OrganizerBot extends TelegramLongPollingBot {
     }
 
     private void setDay(Message message, String text) {
-        Lesson lesson = (Lesson) getEditingValue(message.getChatId());
+        LessonBean lesson = (LessonBean) getEditingValue(message.getChatId());
         DayOfWeek dayOfWeek = DayOfWeek.valueOf(text.toUpperCase());//TODO: rewrite line
         LocalDate date = LocalDate.now();
         if (date.getDayOfWeek().getValue() > dayOfWeek.getValue()) {
