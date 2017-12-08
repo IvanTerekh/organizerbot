@@ -21,6 +21,7 @@ public class BotApplication {
     public static void main(String[] args) {
         regiterLogger("bot.log");
         Locale.setDefault(Locale.UK);
+        System.err.println("Locale = en_GB");
         registerBot();
     }
 
