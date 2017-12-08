@@ -31,15 +31,10 @@ public class DAO {
         }
     }
     public void createSubjects(int id, String title){
-        List<Subject> list = ObjectSelect.query(Subject.class)
+        Subject subject = ObjectSelect.query(Subject.class)
                 .where(Subject.USER_ID.eq(id))
-                .select(context);
-        Subject subject = null;
-        for(Subject s : list){
-            if(s.getSubjectTitle().equals(title)){
-                subject = s;
-            }
-        }
+                .and(Subject.SUBJECT_TITLE.eq(title))
+                .selectOne(context);
         if(subject == null){
             subject = context.newObject(Subject.class);
             subject.setSubjectTitle(title);
@@ -47,7 +42,9 @@ public class DAO {
                     SelectById.query(Users.class, id)
                             .selectOne(context)
             );
+            context.commitChanges();
         }
+
     }
 
     public void createLesson(int id, String subject, LocalDate date, LocalTime time, String room, int type, String professorName){
@@ -58,8 +55,8 @@ public class DAO {
         lesson.setType(type);
 
         Subject sub = ObjectSelect.query(Subject.class)
-                .where(Subject.SUBJECT_TITLE.eq(subject))
-                .and(Subject.USER_ID.eq(id))
+                .where(Subject.USER_ID.eq(id))
+                .and(Subject.SUBJECT_TITLE.eq(subject))
                 .selectOne(context);
 
         Professors professor = ObjectSelect.query(Professors.class)
@@ -68,6 +65,14 @@ public class DAO {
 
         lesson.setSubjects(sub);
         lesson.setProfessor(professor);
+
+        context.commitChanges();
+    }
+
+    public void createProfessor(String name){
+        Professors professors = context.newObject(Professors.class);
+        professors.setProfessorName(name);
+        context.commitChanges();
     }
 
     public List<Lesson> getLessonByDate(LocalDate date, int id){
@@ -99,5 +104,18 @@ public class DAO {
     public Users getUser(int id){
         return SelectById.query(Users.class, id)
                 .selectOne(context);
+    }
+
+    public List<Subject> getSubjectsByUserId(int id){
+        List<Subject> subjects = ObjectSelect.query(Subject.class)
+                .where(Subject.USER_ID.eq(id))
+                .select(context);
+        return subjects;
+    }
+
+    public List<Professors> getProfessors(){
+        List<Professors> professorss = ObjectSelect.query(Professors.class)
+                .select(context);
+        return professorss;
     }
 }
