@@ -201,9 +201,9 @@ public class OrganizerBot extends TelegramLongPollingBot {
         String text = date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)) + "\r\n";
         for (Lesson lesson : lessons){
             text += "------------------------\r\n" +
-                    lesson.getTime().toString() + "\r\n(" +
-                    lesson.getSubjects().getSubjectTitle() + ")" +
-                    LessonType.values()[lesson.getType()].toString().toLowerCase() + "\r\n" +
+                    lesson.getTime().toString() + "\r\n" +
+                    lesson.getSubjects().getSubjectTitle() + " (" +
+                    LessonType.values()[lesson.getType()].toString().toLowerCase() + ")\r\n" +
                     lesson.getRoom() + "\r\n" +
                     lesson.getProfessor().getProfessorName() + "\r\n";
         }
