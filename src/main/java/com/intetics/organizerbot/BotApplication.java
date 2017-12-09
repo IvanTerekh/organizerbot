@@ -16,7 +16,6 @@ public class BotApplication {
 
         regiterLogger("bot.log");
         Locale.setDefault(Locale.UK);
-        System.err.println(org.postgresql.Driver.getVersion());
         registerBot();
     }
 
