@@ -13,7 +13,6 @@ public class BotApplication {
     private static final String LOGTAG = "APP";
 
     public static void main(String[] args) {
-
         regiterLogger("bot.log");
         Locale.setDefault(Locale.UK);
         registerBot();
