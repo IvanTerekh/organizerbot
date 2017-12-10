@@ -230,6 +230,8 @@ public class OrganizerBot extends TelegramLongPollingBot {
         if (!buttons.getString("mainMenu").equals(text)) {
             setLesson(message, text);
             reply(message, messages.getString("classAdded"));
+            LessonBean lesson = (LessonBean) getEditingValue(message.getChatId());
+            showTimetable(message, lesson.getDate());
         }
         setContext(message.getChatId(), Context.MAIN_MENU);
         sendMainMenu(message);
