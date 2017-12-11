@@ -35,27 +35,9 @@ public class Keyboards {
             add(new ArrayList<String>() {{
                 add(buttons.getString("addClass"));
             }});
-//            add(new ArrayList<String>() {{
-//                add(buttons.getString("addEvent"));
-//            }});
-//            add(new ArrayList<String>() {{
-//                add(buttons.getString("addSubject"));
-//            }});
-//            add(new ArrayList<String>() {{
-//                add(buttons.getString("removeSubject"));
-//            }});
         }};
         return makeKeyboard(rows);
     }
-
-//    public static ReplyKeyboardMarkup getAddSubjectKeyboard() {
-//        List<List<String>> rows = new ArrayList<List<String>>() {{
-//            add(new ArrayList<String>() {{
-//                add(buttons.getString("back"));
-//            }});
-//        }};
-//        return makeKeyboard(rows);
-//    }
 
     public static ReplyKeyboardMarkup getListKeyboard(List<String> list) {
         List<List<String>> rows = new ArrayList<>();
@@ -83,33 +65,16 @@ public class Keyboards {
     }
 
     public static ReplyKeyboard getDaysListKeyboard() {
-        List<List<String>> rows = new ArrayList<List<String>>() {{
-            add(new ArrayList<String>() {{
+        List<String> list = new ArrayList<String>() {{
                 add(days.getString("monday"));
-            }});
-            add(new ArrayList<String>() {{
                 add(days.getString("tuesday"));
-            }});
-            add(new ArrayList<String>() {{
                 add(days.getString("wednesday"));
-            }});
-            add(new ArrayList<String>() {{
                 add(days.getString("thursday"));
-            }});
-            add(new ArrayList<String>() {{
                 add(days.getString("friday"));
-            }});
-            add(new ArrayList<String>() {{
                 add(days.getString("saturday"));
-            }});
-            add(new ArrayList<String>() {{
                 add(days.getString("sunday"));
-            }});
-            add(new ArrayList<String>() {{
-                add(buttons.getString("mainMenu"));
-            }});
         }};
-        return makeKeyboard(rows);
+        return getListKeyboard(list);
     }
 
     public static ReplyKeyboard getCalendarKeyboard() {
@@ -198,31 +163,22 @@ public class Keyboards {
     }
 
     public static ReplyKeyboardMarkup getOneTimeOrWeeklyKeyboard() {
-        List<List<String>> rows = new ArrayList<List<String>>() {{
-            add(new ArrayList<String>() {{
+        List<String> list = new ArrayList<String>() {{
                 add(buttons.getString("oneTime"));
-            }});
-            add(new ArrayList<String>() {{
                 add(buttons.getString("weekly"));
-            }});
-            add(new ArrayList<String>() {{
-                add(buttons.getString("mainMenu"));
-            }});
         }};
-        return makeKeyboard(rows);
+        return getListKeyboard(list);
     }
 
     public static ReplyKeyboard getClassTypesListKeyboard() {
-        List<String> types = new ArrayList();
-        classTypes.keySet().stream().forEach(k -> types.add(classTypes.getString(k)));
-        List<List<String>> rows = new ArrayList<>();
-        types.forEach(type -> rows.add(new ArrayList<String>() {{
-            add(type);
-        }}));
-        rows.add(new ArrayList<String>() {{
-            add(buttons.getString("mainMenu"));
-        }});
-        return makeKeyboard(rows);
+        List<String> list = new ArrayList<String>(){{
+            add(classTypes.getString("lecture"));
+            add(classTypes.getString("practice"));
+            add(classTypes.getString("colloquium"));
+            add(classTypes.getString("test"));
+            add(classTypes.getString("exam"));
+        }};
+        return getListKeyboard(list);
     }
 
     public static ReplyKeyboard getViewsKeyboard() {
@@ -231,6 +187,7 @@ public class Keyboards {
             add(buttons.getString("forTomorrow"));
             add(buttons.getString("forOtherDate"));
             add(buttons.getString("forWeek"));
+            add(buttons.getString("forRangeOfDates"));
         }});
     }
 }

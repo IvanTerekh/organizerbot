@@ -36,23 +36,42 @@ public class OrganizerBot extends TelegramLongPollingBot {
     private ResourceBundle messages = ResourceBundle.getBundle("messages");
     private static ResourceBundle days = ResourceBundle.getBundle("days");
 
+    DAO dao = new DAO();
+
     public String getBotUsername() {
         return botInfo.getString("username");
     }
-
-    DAO dao = new DAO();
 
     @Override
     public String getBotToken() {
         return botInfo.getString("token");
     }
 
-    public void onUpdateReceived(Update update) {
+    private class UpdateHandler extends Thread {
+        private Update update;
+
+        public UpdateHandler(Update update) {
+            super();
+            this.update = update;
+        }
+
+        @Override
+        public void run() {
+            handleUpdate(update);
+        }
+    }
+
+    public void handleUpdate(Update update){
         if (update.hasMessage() && update.getMessage().hasText()) {
             handleMessage(update.getMessage());
         } else if (update.hasCallbackQuery()) {
             handleCallbackQuery(update.getCallbackQuery());
         }
+    }
+
+    public void onUpdateReceived(Update update) {
+        UpdateHandler updateHandler = new UpdateHandler(update);
+        updateHandler.run();
     }
 
     private void handleCallbackQuery(CallbackQuery query) {
@@ -64,6 +83,40 @@ public class OrganizerBot extends TelegramLongPollingBot {
             case SHOW_TIMETABLE:
                 handleCallbackQueryFormShowTimetable(query);
                 break;
+            case SHOW_TIMETABLE_RANGE:
+                handleCallbackQueryFormShowTimetableRange(query);
+        }
+    }
+
+    private void handleCallbackQueryFormShowTimetableRange(CallbackQuery query) {
+        String data = query.getData();
+        if (data.startsWith("goto:")) {
+            resetCalendar(query);
+        } else if (data.startsWith("choose:")) {
+            LocalDate date = LocalDate.parse(data.split(":")[1]);
+            handleChoosingRange(query, date);
+        }
+    }
+
+    private void handleChoosingRange(CallbackQuery query, LocalDate date) {
+        if (ContextHolder.getInstance().isEditing(query.getMessage().getChatId())){
+            LocalDate firstDate = (LocalDate) getEditingValue(query.getMessage().getChatId());
+            if (firstDate.isAfter(date)) {
+                LocalDate tmp = firstDate;
+                firstDate = date;
+                date = tmp;
+            }
+            do {
+                showTimetable(query.getMessage(), firstDate);
+                firstDate = firstDate.plusDays(1);
+            } while (!firstDate.isAfter(date));
+            setContext(query.getMessage().getChatId(), Context.MAIN_MENU);
+            sendMainMenu(query.getMessage());
+            ContextHolder.getInstance().removeEditingValue(query.getMessage().getChatId());
+        } else {
+            setEditingValue(query.getMessage().getChatId(), date);
+            reply(query.getMessage(), date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)));
+            reply(query.getMessage(), messages.getString("chooseSecondDate"));
         }
     }
 
@@ -152,6 +205,21 @@ public class OrganizerBot extends TelegramLongPollingBot {
                 break;
             case SHOW_TIMETABLE:
                 handleMessageFromShowTimetable(message);
+                break;
+            case SHOW_TIMETABLE_RANGE:
+                handleMessageFromShowTimetableRange(message);
+                break;
+        }
+    }
+
+    private void handleMessageFromShowTimetableRange(Message message) {
+        String text = message.getText();
+        if (buttons.getString("mainMenu").equals(text)) {
+            setContext(message.getChatId(), Context.MAIN_MENU);
+            sendMainMenu(message);
+        } else {
+            String replyText = messages.getString("cannotUnderstand") + messages.getString("chooseDate1");
+            reply(message, replyText);
         }
     }
 
@@ -163,9 +231,11 @@ public class OrganizerBot extends TelegramLongPollingBot {
         } else if (buttons.getString("forToday").equals(text)) {
             setContext(message.getChatId(), Context.MAIN_MENU);
             showTimetable(message, LocalDate.now());
+            sendMainMenu(message);
         } else if (buttons.getString("forTomorrow").equals(text)) {
             setContext(message.getChatId(), Context.MAIN_MENU);
             showTimetable(message, LocalDate.now().plusDays(1));
+            sendMainMenu(message);
         } else if (buttons.getString("forOtherDate").equals(text)) {
             reply(message, messages.getString("chooseDate1"), Keyboards.getReturnToMenuKeyboard());
             reply(message, messages.getString("chooseDate2"), Keyboards.getCalendarKeyboard());
@@ -175,9 +245,14 @@ public class OrganizerBot extends TelegramLongPollingBot {
             for (int i = 0; i < 7; i++) {
                 showTimetable(message, today.plusDays(i));
             }
+            sendMainMenu(message);
+        } else if (buttons.getString("forRangeOfDates").equals(text)) {
+            setContext(message.getChatId(), Context.SHOW_TIMETABLE_RANGE);
+            reply(message, messages.getString("chooseFirstDate"), Keyboards.getReturnToMenuKeyboard());
+            reply(message, messages.getString("chooseDate2"), Keyboards.getCalendarKeyboard());
         } else {
             String replyText = messages.getString("cannotUnderstand") + ' ' + messages.getString("chooseFromMenu");
-            reply(message, replyText, Keyboards.getListKeyboard(getProfessors()));
+            reply(message, replyText);
         }
     }
 
@@ -186,13 +261,13 @@ public class OrganizerBot extends TelegramLongPollingBot {
         String text = date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)) + "\r\n";
         for (Lesson lesson : lessons){
             text += "------------------------\r\n" +
-                    lesson.getTime().toString() + "\r\n" +
+                    lesson.getTime().toString() + " - " +
                     lesson.getSubjects().getSubjectTitle() + " (" +
                     LessonType.values()[lesson.getType()].toString().toLowerCase() + ")\r\n" +
                     lesson.getRoom() + "\r\n" +
                     lesson.getProfessor().getProfessorName() + "\r\n";
         }
-        reply(message, text, Keyboards.getMainMenuKeyboard());
+        reply(message, text);
     }
 
     private void handleMessageFromAddClassChooseProfessor(Message message) {
@@ -228,18 +303,18 @@ public class OrganizerBot extends TelegramLongPollingBot {
     private void handleMessageFromAddClassChooseRoom(Message message) {
         String text = message.getText();
         if (!buttons.getString("mainMenu").equals(text)) {
+            LessonBean lesson = (LessonBean) getEditingValue(message.getChatId());
             setLesson(message, text);
             reply(message, messages.getString("classAdded"));
-            LessonBean lesson = (LessonBean) getEditingValue(message.getChatId());
             showTimetable(message, lesson.getDate());
         }
         setContext(message.getChatId(), Context.MAIN_MENU);
         sendMainMenu(message);
     }
 
-    private void setLesson(Message message, String text) {
+    private void setLesson(Message message, String room) {
         LessonBean lesson = (LessonBean) getEditingValue(message.getChatId());
-        lesson.setRoom(text);
+        lesson.setRoom(room);
         dao.createLesson(
                 Math.toIntExact(message.getChatId()),
                 lesson.getSubject(),
@@ -261,6 +336,7 @@ public class OrganizerBot extends TelegramLongPollingBot {
                         lesson.getProfessorName());
             }
         }
+        ContextHolder.getInstance().removeEditingValue(message.getChatId());
     }
 
     private void handleMessageFromAddClassChooseType(Message message) {
