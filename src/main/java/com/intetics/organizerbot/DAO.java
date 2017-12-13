@@ -8,7 +8,6 @@ import org.apache.cayenne.ObjectContext;
 import org.apache.cayenne.configuration.server.ServerRuntime;
 import org.apache.cayenne.query.ObjectSelect;
 import org.apache.cayenne.query.SelectById;
-import org.apache.cayenne.configuration.ObjectContextFactory;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
